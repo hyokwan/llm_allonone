@@ -34,6 +34,7 @@ pip install pandas numpy chromadb sentence-transformers openai streamlit fastapi
 ## 환경 설정
 
 프로젝트 루트에 `.env` 파일을 생성하고 다음 내용을 추가하세요:
+codeset 폴더 내
 
 ```env
 # MySQL 설정
