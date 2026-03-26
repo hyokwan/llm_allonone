@@ -1,81 +1,85 @@
-########## 중요 #############
-env.example 파일을 .env 파일로 저장해야함
-
-
-# FaMiliCare 건강관리 챗봇 시스템
-
-이 폴더는 FaMiliCare 건강관리 챗봇 시스템의 전체 파이프라인을 포함합니다. MySQL 데이터베이스의 건강 데이터를 벡터 데이터베이스에 저장하고, RAG(Retrieval-Augmented Generation) 기반의 건강 진단 챗봇을 제공합니다.
-
 ## 시스템 아키텍처
-
 ```
 MySQL → Vector DB (ChromaDB) → FastAPI → Streamlit UI
 ```
 
+## 데이터셋 압축해제
+codeset/dataset 폴더 내 01. 필수의학.zip 압축해제
+dataset 폴더 내 01. 필수의학 폴더가 존재하고 하위에 TL_내과 등이 존재해야함
+
 ## 필수 패키지 설치
 
-설치전 torch 2.7.0 이상 설치
+설치전 torch 2.7.0 이상 설치 (가상상)
 pip install torch==2.7.0 torchvision==0.22.0 torchaudio==2.7.0 --index-url https://download.pytorch.org/whl/cu118
 
+## 패키지 설치 후 아래 명령어 파이썬 쉘에서 실행 후 정상 구동여부 확인
 import torch
 
 print(torch.__version__)          # 설치된 버전 출력
 print(torch.cuda.is_available()
 
+## 추가 패키지 설치
+
 ```bash
 pip install -r requirements.txt
 ```
 
-또는 개별 설치:
+이후 패키지 추가 설치
 ```bash
-pip install pandas numpy chromadb sentence-transformers openai streamlit fastapi uvicorn python-dotenv pymysql sqlalchemy scikit-learn
+pip install -r requirements_finetune.txt
 ```
 
-## 환경 설정
-
-프로젝트 루트에 `.env` 파일을 생성하고 다음 내용을 추가하세요:
-codeset 폴더 내
+########## 중요 #############
+프로젝트 루트폴더(codeset 폴더 내) `.env` 파일을 생성하고 다음 내용을 추가하세요
+#(힘들면 env.example 파일을 .env 파일로 저장 후 codeset 폴더 내 저장)
 
 ```env
 # MySQL 설정
-MYSQL_HOST=localhost
-MYSQL_PORT=3306
-MYSQL_USER=your_username
-MYSQL_PASSWORD=your_password
-MYSQL_DATABASE=your_database
+DB_HOST=my8003.gabiadb.com
+DB_PORT=3306
+DB_NAME=hkcodedb
+DB_USER=hkcode
+DB_PASSWORD=fintech1308!
 
-# OpenAI API 키
-OPENAI_API_KEY=your_openai_api_key
+VECTORDB_TYPE=chromadb
+VECTORDB_PATH=./vectordb
+# full  전체 재 incremental : creatdttm 기준 이후건만 업데이트
+VECTORDB_MODE = full
 
-# Vector DB 경로
-VECTOR_DB_PATH=./vector_db
+UPDATE_THRESHOLD_HOURS=24
+HF_TOKEN=본인허깅페이스토큰입력
+OPENAI_API_KEY=본인OPENAI_API_KEY입력
 ```
 
-## 스크립트 실행 순서
+## 스크립트 실행 순서 파트1 LLM 모델 파인튜닝
+## 파인튜닝 코드는 jupyter lab으로 실행 추천
 
-### 1. 데이터 전처리 (01. data_preprocessing.py)
+### 1. 데이터 전처리 (01. data_preprocessing.ipynb)
 ```bash
-python "01. data_preprocessing.py"
+python "01. data_preprocessing.ipynb"
 ```
 - TL_예방의학, TL_의료법규 폴더의 JSON 파일들을 통합
 - Huggingface Datasets 포맷으로 변환
 - 허깅페이스 허브에 업로드
 
-### 2. 모델 파인튜닝 (02. Fine_tune.py)
+### 2. 모델 파인튜닝 (02. Fine_tune.ipynb)
 ```bash
-python "02. Fine_tune.py"
+python "02. Fine_tune.ipynb"
 ```
 - 사전 훈련된 모델을 의료 데이터로 파인튜닝
 - LoRA 기반 효율적 파인튜닝 수행
 - 모델 체크포인트 저장
 
-### 3. 모델 로드 및 저장 (03. Load_And_Save.py)
+### 3. 모델 로드 및 저장 (03. Load_And_Save.ipynb)
 ```bash
-python "03. Load_And_Save.py"
+python "03. Load_And_Save.ipynb"
 ```
 - 파인튜닝된 모델 로드
 - 모델 성능 평가
 - 최종 모델 저장
+
+## 스크립트 실행 순서 파트2 LLM RAG 및 AGENT
+## 파인튜닝 코드는 jupyter lab으로 실행 추천
 
 ### 4. 벡터 데이터베이스 생성 (04. Gen_vertordb.py)
 ```bash
